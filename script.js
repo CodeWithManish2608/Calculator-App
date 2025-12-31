@@ -1,183 +1,153 @@
-// 🔹 Calculator memory
-// firstNumber = + dabane se pehle wala number
-// operator = konsa operation select hua (abhi sirf "+")
+// ================================
+// 🔹 Calculator Memory
+// ================================
 let firstNumber = null;
 let operator = null;
 
-// 🔹 Display input ka reference (jahan numbers dikhte hain)
+// ================================
+// 🔹 DOM References
+// ================================
 const display = document.getElementById("number");
-
-// 🔹 Saare buttons ka reference (0-9, +, =, Clear)
 const buttons = document.querySelectorAll("button");
+const historyList = document.getElementById("historyList");
+const clearHistoryBtn = document.getElementById("clearHistory");
+console.log(clearHistoryBtn);
 
-// 🔹 Har button pe click listener lagana
-// Ye loop sirf ek baar page load pe chalta hai
+// ================================
+// 🔹 HISTORY FUNCTIONS (GLOBAL)
+// ================================
+function saveToHistory(record) {
+  let history = JSON.parse(localStorage.getItem("calcHistory")) || [];
+  history.push(record);
+  localStorage.setItem("calcHistory", JSON.stringify(history));
+}
+
+function loadHistory() {
+  let history = JSON.parse(localStorage.getItem("calcHistory")) || [];
+  historyList.innerHTML = "";
+
+  history.forEach(item => {
+    const li = document.createElement("li");
+    li.textContent = item;
+    historyList.appendChild(li);
+  });
+}
+
+function clearHistory() {
+  localStorage.removeItem("calcHistory");
+  historyList.innerHTML = "";
+}
+
+// ================================
+// 🔹 BUTTON CLICK HANDLER
+// ================================
 buttons.forEach((button) => {
-
-  // 🔹 Ye function TAB chalta hai jab koi button click hota hai
   button.addEventListener("click", () => {
 
-    // 🔸 CLEAR BUTTON LOGIC
-    // Agar clicked button ka id "clear" hai
-    // to display aur memory reset kar do
+    const value = button.textContent;
+
+    // 🔸 CLEAR (AC)
     if (button.id === "clear") {
       display.value = "";
       firstNumber = null;
       operator = null;
-      return; // aage ka code mat chalao
+      return;
     }
 
-    // 🔹 Button ka text lena (1, 2, +, = etc.)
-    const value = button.textContent;
+    // 🔸 BACKSPACE
+    if (button.id === "backspace") {
+      display.value = display.value.slice(0, -1);
+      return;
+    }
 
-    // 🔸 NUMBER BUTTON LOGIC
-    // Agar button ka text number hai
-    // to use display ke end me add kar do
+    // 🔸 NUMBER BUTTONS
     if (!isNaN(value)) {
       display.value += value;
       return;
     }
-//--------------------for Plus function------------------
-    // 🔸 PLUS (+) BUTTON LOGIC
-    // Current display value ko firstNumber me save karo
-    // Operator ko "+" set karo
-    // Display clear karo taaki next number aa sake
-    if (value === "+") {
-      firstNumber = Number(display.value); // string → number
-      operator = "+";
+
+    // 🔸 DECIMAL
+    if (value === ".") {
+      if (display.value === "") {
+        display.value = "0.";
+        return;
+      }
+      if (display.value.includes(".")) return;
+      display.value += ".";
+      return;
+    }
+
+    // 🔸 PLUS / MINUS TOGGLE
+    if (value === "±") {
+      if (display.value === "") return;
+      display.value = String(Number(display.value) * -1);
+      return;
+    }
+
+    // ================================
+    // 🔹 OPERATORS
+    // ================================
+    if (["+", "-", "x", "/", "%"].includes(value)) {
+      if (display.value === "") return;
+      firstNumber = Number(display.value);
+      operator = value;
       display.value = "";
       return;
     }
 
-    // 🔸 EQUAL (=) BUTTON LOGIC
-    // Agar operator "+" hai aur "=" dabaya gaya
-    // to second number lo aur sum calculate karo
-    if (value === "=" && operator === "+") {
+    // ================================
+    // 🔹 EQUAL (=)
+    // ================================
+    if (value === "=" && operator !== null) {
       const secondNumber = Number(display.value);
-      const sum = firstNumber + secondNumber;
-      display.value = sum;
+      let result;
 
+      switch (operator) {
+        case "+":
+          result = firstNumber + secondNumber;
+          break;
 
-      // 🔹 Calculation ke baad memory reset
+        case "-":
+          result = firstNumber - secondNumber;
+          break;
+
+        case "x":
+          result = firstNumber * secondNumber;
+          break;
+
+        case "/":
+          if (secondNumber === 0) {
+            display.value = "Error";
+            firstNumber = null;
+            operator = null;
+            return;
+          }
+          result = firstNumber / secondNumber;
+          break;
+
+        case "%":
+          if (secondNumber === 0) {
+            display.value = "Error";
+            firstNumber = null;
+            operator = null;
+            return;
+          }
+          result = firstNumber % secondNumber;
+          break;
+      }
+
+      display.value = result;
+      saveToHistory(`${firstNumber} ${operator} ${secondNumber} = ${result}`);
+
       firstNumber = null;
       operator = null;
+      return;
     }
-    //--------------------for Minus function------------------
-        if(value === "-")
-    {
-         if (display.value === "") return;
-        firstNumber = Number(display.value);
-        operator = "-";
-        display.value ="";
-        return;
-    }
-
-    if (value === "=" && operator === "-")
-    {
-        const secondNumber = Number(display.value);
-        const substract = firstNumber - secondNumber;
-        display.value = substract;
-        firstNumber = null;
-        operator = null;
-        return;
-    }
-
-
-//--------------------for Mulitplication function------------------
-
-    if(value==="x"){
-    firstNumber = Number(display.value);
-    operator= "x";
-    display.value="";
-    return;
-    }
-    if(value === "=" && operator ==="x"){
-        const secondNumber = Number(display.value);
-        const multip = firstNumber * secondNumber;
-        display.value = multip;
-        firstNumber =null;
-        operator=null;
-        return;
-    }
-//--------------------for Division function------------------
-
-    if(value==="/"){
-    firstNumber = Number(display.value);
-    operator ="/";
-    display.value="";
-    return;
-    }
-     if(value==="="&& operator ==="/")
-    {
-        const secondNumber =Number(display.value);
-        const divs = firstNumber / secondNumber;
-        display.value = divs;
-        firstNumber =null;
-        operator=null;
-        return;
-    }
-//--------------------for Modulo function------------------
-
-    if(value==="%")
-    {
-        firstNumber = Number(display.value);
-        operator = "%";
-        display.value="";
-        return;
-    }
-    if(value==="="&& operator==="%")
-    {const secondNumber =Number(display.value);
-        if (secondNumber === 0) {
-         display.value = "Error";
-         firstNumber = null;
-         operator = null;
-          return;
-        }
-        display.value = firstNumber % secondNumber;
-        firstNumber=null;
-        operator=null;
-        return;
-
-    }
-//--------------------for backspace function------------------
-
-    if(button.id==="backspace")
-    {
-        display.value = display.value.slice(0, -1);
-        return;
-    }
-
-
-//--------------------for decminal function------------------
-
-    // 🔸 Decimal logic
-if (value === ".") {
-  // agar display empty hai → "0."
-  if (display.value === "") {
-    display.value = "0.";
-    return;
-  }
-
-  // agar pehle se decimal hai → ignore
-  if (display.value.includes(".")) {
-    return;
-  }
-
-  // normal case
-  display.value += ".";
-  return;
-}
-
-//--------------------for plsuminus function------------------
-
-
-if (value === "±") {
-  if (display.value === "") return;
-
-  display.value = String(Number(display.value) * -1);
-  return;
-}
-
-
   });
 });
+
+// ================================
+// 🔹 ON PAGE LOAD
+// ================================
+window.addEventListener("load", loadHistory);
+clearHistoryBtn.addEventListener("click", clearHistory);

@@ -98,3 +98,24 @@ button:hover {
 .zero {
   grid-column: span 1;
 }
+
+.history {
+  margin-top: 20px;
+  padding: 10px;
+  background: #1e1e1e;
+  border-radius: 12px;
+  color: white;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.history ul {
+  list-style: none;
+  padding: 0;
+}
+
+.history li {
+  padding: 5px 0;
+  border-bottom: 1px solid #333;
+  font-size: 14px;
+}
